@@ -61,6 +61,8 @@ from logger.transforms.timestamp_transform import TimestampTransform
 from logger.transforms.parse_nmea_transform import ParseNMEATransform
 from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform
 from logger.transforms.true_winds_transform import TrueWindsTransform
+from logger.transforms.derived_data_transform import DerivedDataTransform
+from logger.transforms.derived_data_transform import ComposedDerivedDataTransform
 
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
@@ -69,7 +71,7 @@ from logger.writers.logfile_writer import LogfileWriter
 from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
 
-from logger.utils import read_json
+from logger.utils import read_json, timestamp
 from logger.listener.listener import Listener
 
 ################################################################################
@@ -95,7 +97,7 @@ class ListenerFromLoggerConfig(Listener):
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords
-      elif type(value) in [float, bool, int, str]:
+      elif type(value) in [float, bool, int, str, list]:
         kwargs[key] = value
 
       # Else what do we have?
@@ -243,6 +245,10 @@ if __name__ == '__main__':
                       help='Convert tagged, timestamped NMEA records into '
                       'Python DASRecords.')
 
+  parser.add_argument('--time_format', dest='time_format',
+                      default=timestamp.TIME_FORMAT,
+                      help='Format in which to expect time strings.')
+
   parser.add_argument('--transform_aggregate_xml', dest='aggregate_xml',
                       default='', help='Aggregate records of XML until a '
                       'completed XML record whose outer element matches '
@@ -252,7 +258,7 @@ if __name__ == '__main__':
   ############################
   # Writers
   parser.add_argument('--write_file', dest='write_file', default=None,
-                      help='File(s) to write to (empty for stdout)')
+                      help='File(s) to write to (\'-\' for stdout)')
 
   parser.add_argument('--write_logfile', dest='write_logfile', default=None,
                       help='Filename base to write to. A date string that '
@@ -445,7 +451,7 @@ if __name__ == '__main__':
         transforms.append(SliceTransform(new_args.slice,
                                          all_args.slice_separator))
       if new_args.timestamp:
-        transforms.append(TimestampTransform())
+        transforms.append(TimestampTransform(time_format=all_args.time_format))
       if new_args.prefix:
         transforms.append(PrefixTransform(new_args.prefix))
       if new_args.regex_filter:
@@ -453,7 +459,7 @@ if __name__ == '__main__':
       if new_args.qc_filter:
         transforms.append(QCFilterTransform(new_args.qc_filter))
       if new_args.parse_nmea:
-        transforms.append(ParseNMEATransform())
+        transforms.append(ParseNMEATransform(time_format=all_args.time_format))
       if new_args.aggregate_xml:
         transforms.append(XMLAggregatorTransform(new_args.aggregate_xml))
 

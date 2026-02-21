@@ -12,14 +12,28 @@ Goto <https://www.centos.org/download/>
 Download CentOS 7 for your hardware.  At the time of this writing we
 are using CentOS-7-x86_64-DVD-1611.iso
 
+NOTE: an experimental script in ```utils/build_openrvdas_centos7.sh``` is designed to perform a full
+installation of OpenRVDAS when run on a clean CentOS 7 system. You can download the script from GitHub and run it
+as root, and it will install and set up the core logging, database and GUI services (NGINX web server and uWSGI). The
+script provides the option of configuring the OpenRVDAS servers to start automatically on boot or manually, via
+```service openrvdas start``` (and shut down via ```service openrvdas stop```). But the script *is*
+still experimental and may break in inexplicable ways.
+
+As an alternative you can manually install OpenRVDAS as follows:
+
 Perform the default CentOS install. Once the installation has completed, open a terminal window and update the installed packages via
 ```
+sudo yum -y install deltarpm
 sudo yum -y update
 ```
 
 Several packages are needed to simplify the installation of OpenRVDAS:
 ```
-sudo yum install -y wget gcc readline-devel zlib-devel openssl-devel
+sudo yum install -y wget gcc readline-devel zlib-devel openssl-devel 
+
+# If you will be installing the Django GUI:
+sudo yum install -y sqlite-devel
+
 ```
 
 ### Prerequisites
@@ -33,7 +47,7 @@ wget https://www.python.org/ftp/python/3.6.3/Python-3.6.3.tgz
 tar xzf Python-3.6.3.tgz
 cd Python-3.6.3
 
-./configure --enable-optimizations
+./configure --enable-optimizations --enable-threading --enable-loadable-sqlite-extensions
 sudo make
 sudo make install
 ```
@@ -114,7 +128,14 @@ cd ~/openrvdas
 python3 -m unittest discover
 ```
 
-Note that NetworkReader and NetworkWriter tests may fail unless the user has permissions to write to port 8001 on the host machine.
+Note that NetworkReader and NetworkWriter tests may fail unless the user has permissions to write UDP to port 8000, 8001 and 8002 on the host machine. Websocket services, by default, will also need TCP access to port 8765. Under CentOS, you can add these permissions with
+```
+sudo firewall-cmd --permanent --add-port=8000/udp
+sudo firewall-cmd --permanent --add-port=8001/udp
+sudo firewall-cmd --permanent --add-port=8002/udp
+sudo firewall-cmd --permanent --add-port=8765/tcp
+sudo firewall-cmd --reload
+```
 
 Tests may be run on a directory by directory basis.  For example, to test all code in logger/readers:
 ```
@@ -127,4 +148,5 @@ it to "debug".
 logger/readers/test_network_reader.py -v -v
 ```
 ## Database and GUI Functionality
-To use the database functionality implemented by DatabaseWriter and DatabaseReader, you will also need to follow the installation and configuration instructions in the [database/README.md](database/README.md) file. To use the Django-based GUI, you will need to follow the instructions in [gui/README.md](gui/README.md).
+To use the database functionality implemented by DatabaseWriter and DatabaseReader, you will also need to follow the installation and configuration instructions in the [database/README.md](database/README.md) file. To use the Django-based GUI, you will need to follow the instructions in [django_gui/README.md](django_gui/README.md).
+

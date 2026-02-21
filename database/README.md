@@ -7,7 +7,7 @@ for an introduction to the OpenRVDAS system. This document discusses
 specifically setting up OpenRVDAS to read/write logger data from/to
 a database using DatabaseReader and DatabaseWriter.
 
-Note that Django, [as discussed in the gui subdir](../gui/README.md),
+Note that Django, [as discussed in the django_gui subdir](../django_gui/README.md),
 has its own database setup - what is described below is only relevant
 to DatabaseReader and DatabaseWriter.
 
@@ -21,9 +21,12 @@ below in "Connector Class Methods"
 
 ## Installation
 
-The steps needed to use the DatabaseReader and DatabaseWriter depend on
-which database you intend to use them with. Below, we describe how to
-set the system up to use MySQLConnector.
+The first step is to copy the distribution file
+[database/settings.py.dist](settings.py.dist)
+over to [database/settings.py](settings.py). From there, the steps needed to use the
+DatabaseReader and DatabaseWriter depend on which database you intend
+to use them with. Below, we describe how to set the system up to use
+MySQLConnector.
 
 ### MySQLConnector
 
@@ -35,6 +38,10 @@ to get the database working:
 1. Install the MySQL server and its client tools
 ```
   apt-get install mysql-server libmysqlclient-dev # ubuntu
+
+  yum install mariadb-server mariadb-devel mariadb-libs # CentOS
+  service mariadb start  # to start db server
+  sudo systemctl enable httpd.service # to make it start on boot
 ```
 2. Install the python mysql-connector modules
 ```
@@ -44,7 +51,9 @@ to get the database working:
 databases and will create an sql user that has access to those databases.
 It will also create a 'test' user that has access only to 'test'.
 ```
-  database/setup_mysql_connector.sh <mysql_user> <mysql_user_pwd>
+  database/setup_mysql_connector.sh <mysql_user> <mysql_user_pwd>  # ubuntu
+
+  database/setup_mariadb_connector.sh <mysql_user> <mysql_user_pwd>  # CentOS
 ```
 (Note: The script will ask for the root MySQL password.)
 
@@ -144,3 +153,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Additional Licenses
+
